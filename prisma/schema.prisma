@@ -1,0 +1,212 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  role      String   @default("user") // user, admin, compliance_officer
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  preferences UserPreferences?
+  alerts      AlertAssignment[]
+  activities  UserActivity[]
+}
+
+model UserPreferences {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  industry      String   @default("General") // Financial, Healthcare, Technology, etc.
+  jurisdiction  String   @default("US") // US, EU, Global, etc.
+  riskTolerance String   @default("Medium") // Low, Medium, High
+  notifications Json     // Notification preferences
+  dashboardConfig Json   // Dashboard layout preferences
+  
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model ComplianceAlert {
+  id           String   @id @default(cuid())
+  title        String
+  description  String
+  source       String
+  category     String   // Regulatory, Vendor, Policy, Enforcement
+  subcategory  String?  // More specific categorization
+  riskLevel    String   // Critical, High, Medium, Low
+  severity     String   // Critical, Warning, Info
+  status       String   @default("Active") // Active, Resolved, Archived, Superseded
+  priority     Int      @default(1) // 1=Critical, 2=High, 3=Medium, 4=Low
+  publishedAt  DateTime
+  expiresAt    DateTime?
+  metadata     Json?    // Additional structured data
+  rawContent   String?  // Original content if applicable
+  tags         Json?    // Array of tags for filtering
+  
+  // Relationships
+  assignments  AlertAssignment[]
+  responses    ComplianceResponse[]
+  activities   UserActivity[]
+  analysis     AlertAnalysis?
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([category])
+  @@index([riskLevel])
+  @@index([status])
+  @@index([publishedAt])
+}
+
+model RegulatoryBody {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  type        String   // SEC, FINRA, GDPR, CCPA, etc.
+  jurisdiction String   // US, EU, California, Global, etc.
+  industry    String?  // Financial, Healthcare, General, etc.
+  website     String?
+  rssFeed     String?
+  apiEndpoint String?
+  isActive    Boolean  @default(true)
+  monitoring  Json?    // Monitoring configuration
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Vendor {
+  id          String   @id @default(cuid())
+  name        String
+  description String?  // Vendor description
+  category    String   // Cloud, Payment, Infrastructure, SaaS, etc.
+  statusPage  String?
+  criticality  String   @default("Medium") // Critical, High, Medium, Low
+  isActive    Boolean  @default(true)
+  monitoring  Json?    // Monitoring configuration
+  contacts    Json?    // Vendor contact information
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AlertAssignment {
+  id         String   @id @default(cuid())
+  alertId    String
+  userId     String
+  assignedAt DateTime @default(now())
+  status     String   @default("Assigned") // Assigned, Acknowledged, InProgress, Resolved
+  dueDate    DateTime?
+  notes      String?
+  
+  alert      ComplianceAlert @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([alertId, userId])
+}
+
+model ComplianceResponse {
+  id          String   @id @default(cuid())
+  alertId     String
+  userId      String?
+  type        String   // Analysis, RiskAssessment, Workflow, Comment
+  content     String
+  metadata    Json?    // Response-specific data
+  confidence  Float?   // AI confidence score if applicable
+  
+  alert       ComplianceAlert @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AlertAnalysis {
+  id           String   @id @default(cuid())
+  alertId      String   @unique
+  summary      String
+  keyRequirements Json?   // Array of key compliance requirements
+  riskFactors  Json     // Detailed risk factor breakdown
+  deadlines    Json?    // Compliance deadlines
+  recommendations Json? // Recommended actions
+  impactAnalysis String  // Business impact analysis
+  confidence   Float    // AI confidence score (0-1)
+  analysisType String   // Regulatory, Risk, Workflow
+  
+  alert        ComplianceAlert @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model UserActivity {
+  id        String   @id @default(cuid())
+  userId    String
+  alertId   String?
+  action    String   // viewed, assigned, acknowledged, resolved, commented
+  details   Json?    // Action-specific details
+  ipAddress String?
+  userAgent String?
+  
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  alert     ComplianceAlert? @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model MonitoringLog {
+  id          String   @id @default(cuid())
+  source      String   // regulatory_body, vendor_status, web_search
+  sourceId    String   // ID of the source being monitored
+  status      String   // success, error, warning
+  message     String?
+  metadata    Json?    // Monitoring-specific data
+  responseTime Int?     // Response time in milliseconds
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([source])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model EmailDelivery {
+  id          String   @id @default(cuid())
+  alertId     String?
+  userId      String?
+  type        String   // daily_digest, critical_alert, weekly_summary
+  recipient   String
+  subject     String
+  content     String
+  status      String   @default("pending") // pending, sent, failed, bounced
+  sentAt      DateTime?
+  deliveredAt DateTime?
+  openedAt    DateTime?
+  errorMessage String?
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([status])
+  @@index([type])
+  @@index([sentAt])
+}

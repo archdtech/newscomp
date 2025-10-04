@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  # Main Next.js application
+  app:
+    image: node:20-alpine
+    working_dir: /app
+    command: sh -c "npm install && npm run dev"
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./:/app
+    restart: unless-stopped
