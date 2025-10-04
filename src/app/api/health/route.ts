@@ -1,29 +1,16 @@
 import { NextResponse } from "next/server";
-<<<<<<< HEAD
-
-export async function GET() {
-  return NextResponse.json({ message: "Good!" });
-=======
 import { db } from '@/lib/db';
 
 export async function GET() {
   try {
     // Check database connectivity
-    const alertCount = await db.complianceAlert.count();
+    const alertCount = await db.alert.count();
     const userCount = await db.user.count();
     
     // Check recent activity
-    const recentAlerts = await db.complianceAlert.count({
+    const recentAlerts = await db.alert.count({
       where: {
-        createdAt: {
-          gte: new Date(Date.now() - 24 * 60 * 60 * 1000) // Last 24 hours
-        }
-      }
-    });
-
-    const recentEmails = await db.emailDelivery.count({
-      where: {
-        createdAt: {
+        publishedAt: {
           gte: new Date(Date.now() - 24 * 60 * 60 * 1000) // Last 24 hours
         }
       }
@@ -41,8 +28,7 @@ export async function GET() {
       metrics: {
         totalAlerts: alertCount,
         totalUsers: userCount,
-        recentAlerts: recentAlerts,
-        recentEmails: recentEmails
+        recentAlerts: recentAlerts
       },
       uptime: process.uptime(),
       environment: process.env.NODE_ENV || "development"
@@ -60,5 +46,4 @@ export async function GET() {
       }
     }, { status: 503 });
   }
->>>>>>> 681bf3f8575421626dc4166ce9f4b2df0df214b5
 }

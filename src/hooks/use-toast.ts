@@ -18,10 +18,6 @@ type ToasterToast = ToastProps & {
   action?: ToastActionElement
 }
 
-<<<<<<< HEAD
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-=======
->>>>>>> 681bf3f8575421626dc4166ce9f4b2df0df214b5
 const actionTypes = {
   ADD_TOAST: "ADD_TOAST",
   UPDATE_TOAST: "UPDATE_TOAST",
