@@ -1,0 +1,129 @@
+# News Scraper Configuration
+
+scraper:
+  name: "Beacon Compliance News Scraper"
+  version: "1.0.0"
+  
+  # Scheduling
+  schedule:
+    enabled: true
+    daily_time: "09:00"  # 9 AM daily
+    weekly_day: "monday"  # Weekly on Monday
+    weekly_time: "09:00"
+    
+  # Database
+  database:
+    type: "sqlite"
+    path: "/app/data/news_database.db"
+    
+  # News Sources
+  sources:
+    compliance_news:
+      - name: "Reuters Compliance"
+        url: "https://www.reuters.com/markets/compliance/"
+        type: "web"
+        selector: "article.story__article"
+        tags: ["compliance", "regulatory", "financial"]
+        
+      - name: "Wall Street Journal Risk & Compliance"
+        url: "https://www.wsj.com/news/type/risk-compliance"
+        type: "web"
+        selector: "article"
+        tags: ["compliance", "risk", "financial"]
+        
+      - name: "Financial Times Compliance"
+        url: "https://www.ft.com/compliance"
+        type: "web"
+        selector: "article"
+        tags: ["compliance", "financial", "regulatory"]
+        
+    regulatory_news:
+      - name: "SEC News"
+        url: "https://www.sec.gov/news/headlines.sec"
+        type: "rss"
+        tags: ["SEC", "regulatory", "financial"]
+        
+      - name: "FCA News"
+        url: "https://www.fca.org.uk/news/rss"
+        type: "rss"
+        tags: ["FCA", "regulatory", "UK"]
+        
+      - name: "EU Regulatory News"
+        url: "https://ec.europa.eu/info/news/rss_en"
+        type: "rss"
+        tags: ["EU", "regulatory", "compliance"]
+        
+    vendor_news:
+      - name: "AWS Status"
+        url: "https://status.aws.amazon.com/rss"
+        type: "rss"
+        tags: ["AWS", "cloud", "vendor"]
+        
+      - name: "Microsoft Azure Status"
+        url: "https://status.azure.com/en-us/status/feed/"
+        type: "rss"
+        tags: ["Azure", "cloud", "vendor"]
+        
+      - name: "Google Cloud Status"
+        url: "https://status.cloud.google.com/incidents/rss"
+        type: "rss"
+        tags: ["Google", "cloud", "vendor"]
+        
+    cybersecurity_news:
+      - name: "Krebs on Security"
+        url: "https://krebsonsecurity.com/feed/"
+        type: "rss"
+        tags: ["cybersecurity", "security", "risk"]
+        
+      - name: "The Hacker News"
+        url: "https://thehackernews.com/feed.xml"
+        type: "rss"
+        tags: ["cybersecurity", "hacking", "security"]
+        
+      - name: "Security Week"
+        url: "https://www.securityweek.com/feed/"
+        type: "rss"
+        tags: ["cybersecurity", "security", "compliance"]
+
+  # Scraping Settings
+  scraping:
+    max_articles_per_source: 50
+    max_content_length: 5000
+    user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+    request_timeout: 30
+    retry_attempts: 3
+    delay_between_requests: 2
+    
+  # Content Processing
+  processing:
+    enable_nlp: true
+    enable_sentiment_analysis: true
+    enable_entity_extraction: true
+    enable_topic_classification: true
+    
+  # Filtering
+  filtering:
+    keywords:
+      compliance: ["compliance", "regulatory", "governance", "audit", "risk"]
+      security: ["cybersecurity", "data breach", "security", "privacy", "gdpr"]
+      financial: ["financial", "banking", "fintech", "sec", "fca"]
+      vendor: ["aws", "azure", "google cloud", "microsoft", "amazon"]
+      
+    exclude_keywords:
+      - "advertisement"
+      - "sponsored"
+      - "press release"
+      - "job posting"
+      
+  # Integration
+  integration:
+    api_endpoint: "http://app:3000/api/news/process"
+    api_key: "your-api-key-here"
+    batch_size: 100
+    
+  # Logging
+  logging:
+    level: "INFO"
+    file: "/app/logs/news_scraper.log"
+    max_size: "10MB"
+    backup_count: 5

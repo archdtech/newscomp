@@ -3,19 +3,40 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+<<<<<<< HEAD
     "dev": "nodemon --exec \"npx tsx server.ts\" --watch server.ts --watch src --ext ts,tsx,js,jsx 2>&1 | tee dev.log",
     "build": "next build",
     "start": "NODE_ENV=production tsx server.ts 2>&1 | tee server.log",
+=======
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+>>>>>>> 681bf3f8575421626dc4166ce9f4b2df0df214b5
     "lint": "next lint",
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
+<<<<<<< HEAD
     "db:reset": "prisma migrate reset"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
+=======
+    "db:reset": "prisma migrate reset",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:seed:regulatory": "tsx prisma/regulatory-seed.ts",
+    "db:seed:alerts": "tsx prisma/alerts-seed.ts",
+    "db:seed:all": "tsx prisma/seed-all.ts"
+  },
+  "dependencies": {
+    "@clerk/nextjs": "^6.33.1",
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
+    "@google/generative-ai": "^0.24.1",
+>>>>>>> 681bf3f8575421626dc4166ce9f4b2df0df214b5
     "@hookform/resolvers": "^5.1.1",
     "@mdxeditor/editor": "^3.39.1",
     "@prisma/client": "^6.11.1",
@@ -58,7 +79,11 @@
     "framer-motion": "^12.23.2",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.525.0",
+<<<<<<< HEAD
     "next": "^15.5.4",
+=======
+    "next": "15.3.5",
+>>>>>>> 681bf3f8575421626dc4166ce9f4b2df0df214b5
     "next-auth": "^4.24.11",
     "next-intl": "^4.3.4",
     "next-themes": "^0.4.6",
@@ -71,6 +96,10 @@
     "react-resizable-panels": "^3.0.3",
     "react-syntax-highlighter": "^15.6.1",
     "recharts": "^2.15.4",
+<<<<<<< HEAD
+=======
+    "resend": "^6.1.2",
+>>>>>>> 681bf3f8575421626dc4166ce9f4b2df0df214b5
     "sharp": "^0.34.3",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",

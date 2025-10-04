@@ -1,0 +1,127 @@
+version: '3.8'
+
+services:
+  app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+      - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
+      - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - GOOGLE_AI_API_KEY=${GOOGLE_AI_API_KEY}
+      - CRON_SECRET=${CRON_SECRET}
+    volumes:
+      - ./prisma:/app/prisma
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=beacon_compliance
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d beacon_compliance"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  news-scraper:
+    build:
+      context: ./news-scraper
+      dockerfile: Dockerfile
+    environment:
+      - NEXTJS_URL=http://app:3000
+      - DATABASE_PATH=/app/data
+    volumes:
+      - scraper_data:/app/data
+    depends_on:
+      - app
+    restart: unless-stopped
+    command: >
+      sh -c "
+        while ! curl -f http://app:3000/api/health; do
+          echo 'Waiting for Next.js app to be ready...'
+          sleep 10
+        done
+        echo 'Starting news scraper...'
+        python -u simple_scraper.py
+      "
+
+  vendor-monitor:
+    build:
+      context: ./news-scraper
+      dockerfile: Dockerfile
+    environment:
+      - NEXTJS_URL=http://app:3000
+      - DATABASE_PATH=/app/data
+    volumes:
+      - scraper_data:/app/data
+    depends_on:
+      - app
+    restart: unless-stopped
+    command: >
+      sh -c "
+        while ! curl -f http://app:3000/api/health; do
+          echo 'Waiting for Next.js app to be ready...'
+          sleep 10
+        done
+        echo 'Starting vendor monitor...'
+        while true; do
+          python -u vendor_monitor.py
+          echo 'Vendor monitoring cycle completed, sleeping for 300 seconds...'
+          sleep 300
+        done
+      "
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - app
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  scraper_data:
